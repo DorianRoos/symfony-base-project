@@ -1,0 +1,38 @@
+version: '2'
+
+services:
+
+  nginx:
+    build: ./docker/nginx
+    ports:
+     - 8080:80
+    links:
+     - php
+    volumes:
+     - .:/var/www/symfony
+    environment:
+     - VIRTUAL_HOST=local.symfony.dev
+     - ROOT_PATH=/var/www/symfony/web
+     - PHP_CONTAINER_NAME=php
+    command: /bin/bash -c "envsubst '$${VIRTUAL_HOST} $${ROOT_PATH} $${PHP_CONTAINER_NAME}' < /etc/nginx/conf.d/api.template >> /etc/nginx/conf.d/api.conf && nginx -g 'daemon off;'"
+    working_dir: /var/www/symfony
+
+  php:
+    build: ./docker/php
+    expose:
+     - 9000
+    volumes:
+     - .:/var/www/symfony
+    links:
+     - mysql
+    shm_size: 2046M
+    working_dir: /var/www/symfony
+
+  mysql:
+    image: mysql:latest
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: symfony
+      MYSQL_USER: symfony
+      MYSQL_PASSWORD: symfony
+
